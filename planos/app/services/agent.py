@@ -68,7 +68,7 @@ class AgentService:
             from planos.app.agents.orchestrator import Orchestrator
 
             if agent_type == "planner" and plan_id:
-                result = await Orchestrator(self.session).run_full_workflow(
+                await Orchestrator(self.session).run_full_workflow(
                     plan_id=plan_id,
                     goal_text=input_text,
                     organization_id=organization_id,

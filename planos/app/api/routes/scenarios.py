@@ -47,11 +47,9 @@ async def create_scenario(
 async def list_scenarios(
     current_user: Annotated[AuthenticatedUser, Depends(require_scenario_read)],
     session: Annotated[AsyncSession, Depends(get_session)],
-    pagination: Annotated[PaginationParams, Query()] = None,
+    pagination: Annotated[PaginationParams, Query()] = PaginationParams(),
 ) -> ScenarioListResponse:
     """List scenarios for the current organization."""
-    if pagination is None:
-        pagination = PaginationParams()
     service = ScenarioService(session)
     scenarios, total = await service.list_scenarios(
         current_user.organization_id,

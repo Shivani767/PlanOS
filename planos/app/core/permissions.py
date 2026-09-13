@@ -2,17 +2,17 @@
 
 from __future__ import annotations
 
-from enum import Enum
+from enum import StrEnum
 
 
-class Role(str, Enum):
+class Role(StrEnum):
     ADMIN = "ADMIN"
     PLANNER = "PLANNER"
     ANALYST = "ANALYST"
     VIEWER = "VIEWER"
 
 
-class Permission(str, Enum):
+class Permission(StrEnum):
     # Plan permissions
     PLAN_READ = "plan:read"
     PLAN_CREATE = "plan:create"

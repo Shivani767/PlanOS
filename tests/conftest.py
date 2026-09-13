@@ -86,7 +86,7 @@ async def unique_org_user(session: AsyncSession) -> dict:
     org = Organization(name=f"Org {slug}", slug=slug)
     session.add(org)
     await session.flush()
-    user = User(organization_id=org.id, email=f"u-{uuid.uuid4().hex[:8]}@test.local",
+    user = User(organization_id=org.id, email=f"u-{uuid.uuid4().hex[:8]}@example.com",
                 hashed_password=hash_password("password123"),
                 full_name="Test User", role="ADMIN")
     session.add(user)

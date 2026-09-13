@@ -31,7 +31,7 @@ def _embed(text: str, dim: int = 64) -> list[float]:
 
 
 def _cosine(a: list[float], b: list[float]) -> float:
-    return sum(x * y for x, y in zip(a, b))
+    return sum(x * y for x, y in zip(a, b, strict=False))
 
 
 def chunk_text(content: str, max_tokens: int = 200) -> list[str]:

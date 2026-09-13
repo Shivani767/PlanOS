@@ -12,8 +12,8 @@ class ErrorResponse(BaseModel):
 
 
 class PaginationParams(BaseModel):
-    page: int = Field(1, ge=1)
-    page_size: int = Field(20, ge=1, le=100)
+    page: int = Field(default=1, ge=1)
+    page_size: int = Field(default=20, ge=1, le=100)
 
 
 class HealthResponse(BaseModel):

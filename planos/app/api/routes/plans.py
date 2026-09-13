@@ -46,12 +46,10 @@ async def create_plan(
 async def list_plans(
     current_user: Annotated[AuthenticatedUser, Depends(require_plan_read)],
     session: Annotated[AsyncSession, Depends(get_session)],
-    pagination: Annotated[PaginationParams, Query()] = None,
+    pagination: Annotated[PaginationParams, Query()] = PaginationParams(),
     status_filter: str | None = Query(None, alias="status"),
 ) -> PlanListResponse:
     """List plans for the current organization."""
-    if pagination is None:
-        pagination = PaginationParams()
     service = PlanService(session)
     plans, total = await service.list_plans(
         current_user.organization_id,

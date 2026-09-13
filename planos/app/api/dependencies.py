@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from typing import Annotated
+from collections.abc import Callable
+from typing import Annotated, Any
 
 from fastapi import Depends, Request
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
@@ -85,7 +86,7 @@ async def require_permission(
     return current_user
 
 
-def require_permission_factory(permission: Permission):
+def require_permission_factory(permission: Permission) -> Callable[..., Any]:
     """Create a dependency that requires a specific permission."""
 
     async def _dependency(

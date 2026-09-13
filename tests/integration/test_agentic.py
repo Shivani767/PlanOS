@@ -26,7 +26,7 @@ async def _make_org_user(
     await session.flush()
     user = User(
         organization_id=org.id,
-        email=f"agent-{suffix}@test.local",
+        email=f"agent-{suffix}@example.com",
         hashed_password=hash_password("password123"),
         full_name="Test User",
         role=role,

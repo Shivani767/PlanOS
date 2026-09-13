@@ -20,7 +20,7 @@ class PlanningEngine:
 
     @staticmethod
     def calculate_revenue(units: float, price: float) -> float:
-        """Revenue = units × price"""
+        """Revenue = units x price"""
         return units * price
 
     @staticmethod
@@ -35,7 +35,7 @@ class PlanningEngine:
 
     @staticmethod
     def calculate_capacity_utilization(demand: float, available_capacity: float) -> float:
-        """Capacity utilization = demand / available_capacity × 100"""
+        """Capacity utilization = demand / available_capacity x 100"""
         if available_capacity == 0:
             return 0.0
         return (demand / available_capacity) * 100
@@ -45,7 +45,7 @@ class PlanningEngine:
         forecast_demand: float,
         safety_factor: float = 1.2,
     ) -> float:
-        """Inventory requirement = forecast_demand × safety_factor"""
+        """Inventory requirement = forecast_demand x safety_factor"""
         return forecast_demand * safety_factor
 
     @staticmethod

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime, timedelta
+from typing import Any
 
 from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -90,7 +91,7 @@ class MemoryService:
 
     async def prune_expired(self, organization_id: str) -> int:
         now = datetime.now(UTC)
-        res = await self.session.execute(
+        res: Any = await self.session.execute(
             delete(MemoryEntry).where(
                 MemoryEntry.organization_id == organization_id,
                 MemoryEntry.expires_at.is_not(None),

@@ -8,7 +8,7 @@ from typing import Any
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from planos.app.core.exceptions import NotFoundError
+from planos.app.core.exceptions import ConflictError, NotFoundError
 from planos.app.models import IdempotencyRecord, Job
 
 TERMINAL = {"success", "failed", "cancelled"}
@@ -69,7 +69,7 @@ class JobService:
                 await self.session.flush()
             except Exception as exc:
                 await self.session.rollback()
-                raise ForbiddenError("Duplicate idempotent request in flight") from exc
+                raise ConflictError("Duplicate idempotent request in flight") from exc
         row = await self.session.execute(
             select(Scenario).where(
                 Scenario.id == scenario_id, Scenario.organization_id == organization_id

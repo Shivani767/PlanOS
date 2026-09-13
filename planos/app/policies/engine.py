@@ -70,9 +70,8 @@ def evaluate_tool(tool_name: str, role: str, args: dict | None = None) -> Policy
             tool_name.startswith("get_") or tool_name in {"compare_scenarios", "search_knowledge"}
         ):
             return PolicyDecision.deny(f"VIEWER cannot execute '{tool_name}'")
-    elif role == "ANALYST":
-        if tool_name in {"create_change_request", "delete_plan", "apply_change_set"}:
-            return PolicyDecision.deny(f"ANALYST cannot execute '{tool_name}'")
+    elif role == "ANALYST" and tool_name in {"create_change_request", "delete_plan", "apply_change_set"}:
+        return PolicyDecision.deny(f"ANALYST cannot execute '{tool_name}'")
     if tool_name in {"create_scenario", "run_scenario", "create_change_request"}:
         return evaluate_assumptions(args.get("assumptions") or args.get("changes") or {}, role)
     if tool_name in {"apply_change_set", "approve_change", "delete_plan"}:

@@ -28,12 +28,9 @@ class Evaluator:
             tools_selected = response.get("tools_used", [])
             tools_correct = all(t in case.expected_tools for t in tools_selected)
 
-            output_valid = True
             expected = case.expected_output_properties
-            if isinstance(expected, dict):
-                props = list(expected.keys())
-            else:
-                props = list(expected)
+            props = list(expected.keys()) if isinstance(expected, dict) else list(expected)
+            output_valid = True
             for prop in props:
                 if prop not in response.get("output", {}):
                     output_valid = False

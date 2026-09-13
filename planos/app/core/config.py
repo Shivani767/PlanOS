@@ -21,10 +21,10 @@ class Settings(BaseSettings):
     app_name: str = "PlanOS"
     app_env: str = "development"
     debug: bool = False
-    secret_key: str = "change-me"
+    secret_key: str = "change-me"  # noqa: S105
 
     # Server
-    host: str = "0.0.0.0"
+    host: str = "0.0.0.0"  # noqa: S104
     port: int = 8000
 
     # Database
@@ -39,7 +39,7 @@ class Settings(BaseSettings):
     celery_result_backend: str = "redis://localhost:6379/2"
 
     # JWT
-    jwt_secret_key: str = "jwt-secret-change-me"
+    jwt_secret_key: str = "jwt-secret-change-me"  # noqa: S105
     jwt_algorithm: str = "HS256"
     jwt_access_token_expire_minutes: int = 30
     jwt_refresh_token_expire_days: int = 7

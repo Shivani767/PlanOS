@@ -70,7 +70,6 @@ class AuthService:
         access_token = create_access_token(user.id, scopes=scopes)
         refresh_token = create_refresh_token(user.id)
 
-        logger.user_id = user.id
         logger.info("user_login", user_id=user.id)
 
         return TokenResponse(

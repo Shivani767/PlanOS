@@ -2,10 +2,9 @@
 
 from __future__ import annotations
 
-from datetime import UTC, datetime, timezone
-from typing import Optional
+from datetime import UTC, datetime
 
-from sqlalchemy import Boolean, DateTime, ForeignKey, String, UniqueConstraint
+from sqlalchemy import Boolean, DateTime, ForeignKey, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from planos.app.db.session import Base, generate_uuid
@@ -57,29 +56,50 @@ class User(Base):
 
 
 # Re-export models from submodules for convenient access
-from planos.app.models.agent import Agent, AgentRun, AgentStep
-from planos.app.models.approval import ApprovalRequest
-from planos.app.models.audit import AuditLog
-from planos.app.models.change_set import ChangeSet
-from planos.app.models.checkpoint import Checkpoint
-from planos.app.models.dimension import Department, Product, Region, TimePeriod
-from planos.app.models.import_job import ImportJob
-from planos.app.models.job import Job
-from planos.app.models.knowledge import (
+from planos.app.models.agent import Agent, AgentRun, AgentStep  # noqa: E402
+from planos.app.models.approval import ApprovalRequest  # noqa: E402
+from planos.app.models.audit import AuditLog  # noqa: E402
+from planos.app.models.change_set import ChangeSet  # noqa: E402
+from planos.app.models.checkpoint import Checkpoint  # noqa: E402
+from planos.app.models.dimension import Department, Product, Region, TimePeriod  # noqa: E402
+from planos.app.models.import_job import ImportJob  # noqa: E402
+from planos.app.models.job import Job  # noqa: E402
+from planos.app.models.knowledge import (  # noqa: E402
     IdempotencyRecord,
     KnowledgeChunk,
     KnowledgeDocument,
     MemoryEntry,
 )
-from planos.app.models.plan import Plan, PlanVersion
-from planos.app.models.planning_data import PlanningData
-from planos.app.models.scenario import Scenario, ScenarioChange, ScenarioResult
-from planos.app.models.tool_call import ToolCall
+from planos.app.models.plan import Plan, PlanVersion  # noqa: E402
+from planos.app.models.planning_data import PlanningData  # noqa: E402
+from planos.app.models.scenario import Scenario, ScenarioChange, ScenarioResult  # noqa: E402
+from planos.app.models.tool_call import ToolCall  # noqa: E402
 
 __all__ = [
-    "Organization", "User", "Agent", "AgentRun", "AgentStep", "ApprovalRequest",
-    "AuditLog", "ChangeSet", "Checkpoint", "Department", "Product", "Region",
-    "TimePeriod", "ImportJob", "Job", "IdempotencyRecord", "KnowledgeChunk",
-    "KnowledgeDocument", "MemoryEntry", "Plan", "PlanVersion", "PlanningData",
-    "Scenario", "ScenarioChange", "ScenarioResult", "ToolCall",
+    "Agent",
+    "AgentRun",
+    "AgentStep",
+    "ApprovalRequest",
+    "AuditLog",
+    "ChangeSet",
+    "Checkpoint",
+    "Department",
+    "IdempotencyRecord",
+    "ImportJob",
+    "Job",
+    "KnowledgeChunk",
+    "KnowledgeDocument",
+    "MemoryEntry",
+    "Organization",
+    "Plan",
+    "PlanVersion",
+    "PlanningData",
+    "Product",
+    "Region",
+    "Scenario",
+    "ScenarioChange",
+    "ScenarioResult",
+    "TimePeriod",
+    "ToolCall",
+    "User",
 ]
