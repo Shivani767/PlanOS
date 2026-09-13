@@ -1,0 +1,5 @@
+aws_region = "us-east-1"
+app_name   = "planos"
+environment = "prod"
+db_password = "CHANGE_ME_STRONG_PASSWORD"
+jwt_secret  = "CHANGE_ME_JWT_SECRET_MIN_32_CHARS"
