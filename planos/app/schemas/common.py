@@ -16,6 +16,10 @@ class PaginationParams(BaseModel):
     page_size: int = Field(default=20, ge=1, le=100)
 
 
+#: Module-level default (B008-safe: no function call in argument defaults).
+DEFAULT_PAGINATION = PaginationParams()
+
+
 class HealthResponse(BaseModel):
     status: str
     version: str

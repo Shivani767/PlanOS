@@ -14,7 +14,7 @@ from planos.app.api.dependencies import (
 from planos.app.core.permissions import Permission
 from planos.app.db.session import get_session
 from planos.app.infrastructure.cache import cache_key, cached, invalidate
-from planos.app.schemas.common import PaginationParams
+from planos.app.schemas.common import DEFAULT_PAGINATION, PaginationParams
 from planos.app.schemas.plan import (
     PlanCreate,
     PlanListResponse,
@@ -46,7 +46,7 @@ async def create_plan(
 async def list_plans(
     current_user: Annotated[AuthenticatedUser, Depends(require_plan_read)],
     session: Annotated[AsyncSession, Depends(get_session)],
-    pagination: Annotated[PaginationParams, Query()] = PaginationParams(),
+    pagination: Annotated[PaginationParams, Query()] = DEFAULT_PAGINATION,
     status_filter: str | None = Query(None, alias="status"),
 ) -> PlanListResponse:
     """List plans for the current organization."""

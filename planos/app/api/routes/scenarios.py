@@ -13,7 +13,7 @@ from planos.app.api.dependencies import (
 )
 from planos.app.core.permissions import Permission
 from planos.app.db.session import get_session
-from planos.app.schemas.common import PaginationParams
+from planos.app.schemas.common import DEFAULT_PAGINATION, PaginationParams
 from planos.app.schemas.scenario import (
     ScenarioCompareRequest,
     ScenarioCreate,
@@ -47,7 +47,7 @@ async def create_scenario(
 async def list_scenarios(
     current_user: Annotated[AuthenticatedUser, Depends(require_scenario_read)],
     session: Annotated[AsyncSession, Depends(get_session)],
-    pagination: Annotated[PaginationParams, Query()] = PaginationParams(),
+    pagination: Annotated[PaginationParams, Query()] = DEFAULT_PAGINATION,
 ) -> ScenarioListResponse:
     """List scenarios for the current organization."""
     service = ScenarioService(session)
