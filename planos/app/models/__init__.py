@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime, timezone
 from typing import Optional
 
 from sqlalchemy import Boolean, DateTime, ForeignKey, String, UniqueConstraint
@@ -18,12 +18,12 @@ class Organization(Base):
     name: Mapped[str] = mapped_column(String(255), nullable=False)
     slug: Mapped[str] = mapped_column(String(100), unique=True, nullable=False)
     created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False
+        DateTime(timezone=True), default=lambda: datetime.now(UTC), nullable=False
     )
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
-        default=lambda: datetime.now(timezone.utc),
-        onupdate=lambda: datetime.now(timezone.utc),
+        default=lambda: datetime.now(UTC),
+        onupdate=lambda: datetime.now(UTC),
         nullable=False,
     )
 
@@ -44,12 +44,12 @@ class User(Base):
     role: Mapped[str] = mapped_column(String(50), nullable=False, default="VIEWER")
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
     created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), nullable=False
+        DateTime(timezone=True), default=lambda: datetime.now(UTC), nullable=False
     )
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
-        default=lambda: datetime.now(timezone.utc),
-        onupdate=lambda: datetime.now(timezone.utc),
+        default=lambda: datetime.now(UTC),
+        onupdate=lambda: datetime.now(UTC),
         nullable=False,
     )
 
@@ -60,9 +60,26 @@ class User(Base):
 from planos.app.models.agent import Agent, AgentRun, AgentStep
 from planos.app.models.approval import ApprovalRequest
 from planos.app.models.audit import AuditLog
+from planos.app.models.change_set import ChangeSet
 from planos.app.models.checkpoint import Checkpoint
-from planos.app.models.dimension import Product, Region, Department, TimePeriod
+from planos.app.models.dimension import Department, Product, Region, TimePeriod
 from planos.app.models.import_job import ImportJob
+from planos.app.models.job import Job
+from planos.app.models.knowledge import (
+    IdempotencyRecord,
+    KnowledgeChunk,
+    KnowledgeDocument,
+    MemoryEntry,
+)
 from planos.app.models.plan import Plan, PlanVersion
 from planos.app.models.planning_data import PlanningData
 from planos.app.models.scenario import Scenario, ScenarioChange, ScenarioResult
+from planos.app.models.tool_call import ToolCall
+
+__all__ = [
+    "Organization", "User", "Agent", "AgentRun", "AgentStep", "ApprovalRequest",
+    "AuditLog", "ChangeSet", "Checkpoint", "Department", "Product", "Region",
+    "TimePeriod", "ImportJob", "Job", "IdempotencyRecord", "KnowledgeChunk",
+    "KnowledgeDocument", "MemoryEntry", "Plan", "PlanVersion", "PlanningData",
+    "Scenario", "ScenarioChange", "ScenarioResult", "ToolCall",
+]

@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import pytest
-
 from planos.app.evaluation.datasets import (
     get_all_eval_cases,
     get_analyst_agent_cases,

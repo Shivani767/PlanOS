@@ -9,11 +9,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from planos.app.api.dependencies import (
     AuthenticatedUser,
-    get_current_user,
     require_permission_factory,
 )
 from planos.app.core.permissions import Permission
 from planos.app.db.session import get_session
+from planos.app.infrastructure.cache import cache_key, cached, invalidate
 from planos.app.schemas.common import PaginationParams
 from planos.app.schemas.plan import (
     PlanCreate,
@@ -73,10 +73,16 @@ async def get_plan(
     current_user: Annotated[AuthenticatedUser, Depends(require_plan_read)],
     session: Annotated[AsyncSession, Depends(get_session)],
 ) -> PlanResponse:
-    """Get a plan by ID."""
-    service = PlanService(session)
-    plan = await service.get_by_id(plan_id, current_user.organization_id)
-    return PlanResponse.model_validate(plan)
+    """Get a plan by ID (cache-aside, tenant-safe key)."""
+    key = cache_key("plan", current_user.organization_id, plan_id)
+
+    async def _load() -> dict:
+        service = PlanService(session)
+        plan = await service.get_by_id(plan_id, current_user.organization_id)
+        return PlanResponse.model_validate(plan).model_dump(mode="json")
+
+    data, _hit = await cached(key, 60, _load)
+    return PlanResponse(**data)
 
 
 @router.patch("/{plan_id}", response_model=PlanResponse)
@@ -89,4 +95,20 @@ async def update_plan(
     """Update a plan with optimistic concurrency control."""
     service = PlanService(session)
     plan = await service.update(plan_id, data, current_user.organization_id, current_user.user_id)
+    await invalidate(cache_key("plan", current_user.organization_id, plan_id) + "*")
     return PlanResponse.model_validate(plan)
+
+
+@router.delete("/{plan_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_plan(
+    plan_id: str,
+    current_user: Annotated[
+        AuthenticatedUser, Depends(require_permission_factory(Permission.PLAN_DELETE))
+    ],
+    session: Annotated[AsyncSession, Depends(get_session)],
+) -> None:
+    """Delete a plan (admin only; DB cascades versions + planning data)."""
+    await PlanService(session).delete(
+        plan_id, current_user.organization_id, current_user.user_id
+    )
+    await invalidate(cache_key("plan", current_user.organization_id, plan_id) + "*")

@@ -2,16 +2,16 @@
 
 from __future__ import annotations
 
-from typing import Annotated, Optional
+from typing import Annotated
 
-from fastapi import Depends, Header, Request
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from fastapi import Depends, Request
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from planos.app.core.exceptions import ForbiddenError, UnauthorizedError
 from planos.app.core.logging import get_logger
-from planos.app.core.permissions import Permission, Role, has_permission
+from planos.app.core.permissions import Permission, has_permission
 from planos.app.core.security import decode_token
 from planos.app.db.session import get_session
 from planos.app.models import User
@@ -35,7 +35,7 @@ class AuthenticatedUser:
 
 
 async def get_current_user(
-    credentials: Annotated[Optional[HTTPAuthorizationCredentials], Depends(security_scheme)],
+    credentials: Annotated[HTTPAuthorizationCredentials | None, Depends(security_scheme)],
     session: Annotated[AsyncSession, Depends(get_session)],
 ) -> AuthenticatedUser:
     """Extract and validate the current user from JWT token."""
@@ -81,18 +81,18 @@ async def require_permission(
             required_permission=permission.value,
             role=current_user.role,
         )
-        raise ForbiddenError(
-            f"Permission denied: {permission.value} required"
-        )
+        raise ForbiddenError(f"Permission denied: {permission.value} required")
     return current_user
 
 
 def require_permission_factory(permission: Permission):
     """Create a dependency that requires a specific permission."""
+
     async def _dependency(
         current_user: Annotated[AuthenticatedUser, Depends(get_current_user)],
     ) -> AuthenticatedUser:
         return await require_permission(permission, current_user)
+
     return _dependency
 
 

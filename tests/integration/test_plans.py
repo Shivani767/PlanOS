@@ -3,49 +3,12 @@
 from __future__ import annotations
 
 import pytest
-from httpx import AsyncClient, ASGITransport
-from sqlalchemy.ext.asyncio import AsyncSession
-
-from planos.app.main import create_app
-from planos.app.db.session import async_session_factory, engine, Base
-from planos.app.models import Organization, User
-from planos.app.core.security import hash_password, create_access_token
-
-
-@pytest.fixture
-async def client():
-    app = create_app()
-    transport = ASGITransport(app=app)
-    async with AsyncClient(transport=transport, base_url="http://test") as ac:
-        yield ac
-
-
-@pytest.fixture
-async def test_org_and_user():
-    async with async_session_factory() as session:
-        org = Organization(name="Test Org Plans", slug="test-org-plans")
-        session.add(org)
-        await session.flush()
-
-        user = User(
-            organization_id=org.id,
-            email="plans@example.com",
-            hashed_password=hash_password("testpass123"),
-            full_name="Plans User",
-            role="ADMIN",
-        )
-        session.add(user)
-        await session.commit()
-
-        token = create_access_token(user.id)
-        yield {"org": org, "user": user, "token": token}
-        await session.close()
 
 
 @pytest.mark.asyncio
-async def test_create_plan(client, test_org_and_user):
+async def test_create_plan(client, unique_org_user):
     """Test plan creation."""
-    headers = {"Authorization": f"Bearer {test_org_and_user['token']}"}
+    headers = {"Authorization": f"Bearer {unique_org_user['token']}"}
     response = await client.post(
         "/api/v1/plans",
         headers=headers,
@@ -59,9 +22,9 @@ async def test_create_plan(client, test_org_and_user):
 
 
 @pytest.mark.asyncio
-async def test_list_plans(client, test_org_and_user):
+async def test_list_plans(client, unique_org_user):
     """Test listing plans."""
-    headers = {"Authorization": f"Bearer {test_org_and_user['token']}"}
+    headers = {"Authorization": f"Bearer {unique_org_user['token']}"}
 
     # Create a plan first
     await client.post(
@@ -78,9 +41,9 @@ async def test_list_plans(client, test_org_and_user):
 
 
 @pytest.mark.asyncio
-async def test_get_plan(client, test_org_and_user):
+async def test_get_plan(client, unique_org_user):
     """Test getting a specific plan."""
-    headers = {"Authorization": f"Bearer {test_org_and_user['token']}"}
+    headers = {"Authorization": f"Bearer {unique_org_user['token']}"}
 
     create_resp = await client.post(
         "/api/v1/plans",
@@ -95,9 +58,9 @@ async def test_get_plan(client, test_org_and_user):
 
 
 @pytest.mark.asyncio
-async def test_update_plan_optimistic_lock(client, test_org_and_user):
+async def test_update_plan_optimistic_lock(client, unique_org_user):
     """Test optimistic concurrency control on plan updates."""
-    headers = {"Authorization": f"Bearer {test_org_and_user['token']}"}
+    headers = {"Authorization": f"Bearer {unique_org_user['token']}"}
 
     create_resp = await client.post(
         "/api/v1/plans",
@@ -125,9 +88,9 @@ async def test_update_plan_optimistic_lock(client, test_org_and_user):
 
 
 @pytest.mark.asyncio
-async def test_delete_plan(client, test_org_and_user):
+async def test_delete_plan(client, unique_org_user):
     """Test plan deletion."""
-    headers = {"Authorization": f"Bearer {test_org_and_user['token']}"}
+    headers = {"Authorization": f"Bearer {unique_org_user['token']}"}
 
     create_resp = await client.post(
         "/api/v1/plans",

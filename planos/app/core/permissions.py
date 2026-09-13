@@ -23,6 +23,7 @@ class Permission(str, Enum):
     SCENARIO_READ = "scenario:read"
     SCENARIO_CREATE = "scenario:create"
     SCENARIO_RUN = "scenario:run"
+    SCENARIO_DELETE = "scenario:delete"
 
     # Baseline permissions
     BASELINE_MODIFY = "baseline:modify"
@@ -54,6 +55,7 @@ ROLE_PERMISSIONS: dict[Role, set[Permission]] = {
         Permission.SCENARIO_READ,
         Permission.SCENARIO_CREATE,
         Permission.SCENARIO_RUN,
+        Permission.SCENARIO_DELETE,
         Permission.BASELINE_MODIFY,
         Permission.APPROVAL_REQUEST,
         Permission.APPROVAL_APPROVE,
@@ -71,6 +73,7 @@ ROLE_PERMISSIONS: dict[Role, set[Permission]] = {
         Permission.SCENARIO_READ,
         Permission.SCENARIO_CREATE,
         Permission.SCENARIO_RUN,
+        Permission.SCENARIO_DELETE,
         Permission.BASELINE_MODIFY,
         Permission.APPROVAL_REQUEST,
         Permission.IMPORT_CREATE,

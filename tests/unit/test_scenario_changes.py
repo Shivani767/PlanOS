@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import pytest
-
 from planos.app.planning.calculator import PlanningEngine
 from planos.app.planning.engine import PlanningMetrics, ScenarioChanges
 

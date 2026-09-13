@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from typing import Optional
-
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
@@ -39,9 +37,7 @@ class AuthService:
             raise ValidationError(f"Organization '{data.organization_slug}' not found")
 
         # Check if email already exists
-        existing = await self.session.execute(
-            select(User).where(User.email == data.email)
-        )
+        existing = await self.session.execute(select(User).where(User.email == data.email))
         if existing.scalar_one_or_none():
             raise ValidationError("Email already registered")
 
@@ -61,9 +57,7 @@ class AuthService:
 
     async def login(self, data: LoginRequest) -> TokenResponse:
         """Authenticate user and return tokens."""
-        result = await self.session.execute(
-            select(User).where(User.email == data.email)
-        )
+        result = await self.session.execute(select(User).where(User.email == data.email))
         user = result.scalar_one_or_none()
 
         if not user or not verify_password(data.password, user.hashed_password):
@@ -110,7 +104,7 @@ class AuthService:
             expires_in=30 * 60,
         )
 
-    async def get_user_by_id(self, user_id: str) -> Optional[User]:
+    async def get_user_by_id(self, user_id: str) -> User | None:
         """Get user by ID with organization eagerly loaded."""
         result = await self.session.execute(
             select(User).where(User.id == user_id).options(selectinload(User.organization))

@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from typing import Optional
-
 
 class PlanOSError(Exception):
     """Base exception for PlanOS."""
@@ -15,7 +13,7 @@ class PlanOSError(Exception):
 
 
 class NotFoundError(PlanOSError):
-    def __init__(self, resource: str, resource_id: Optional[str] = None):
+    def __init__(self, resource: str, resource_id: str | None = None):
         msg = f"{resource} not found"
         if resource_id:
             msg = f"{resource} with id '{resource_id}' not found"

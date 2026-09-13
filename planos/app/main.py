@@ -2,25 +2,36 @@
 
 from __future__ import annotations
 
+from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
-from typing import AsyncGenerator
 
 from fastapi import FastAPI, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
-from planos.app.api.routes import agents, auth, plans, runs, scenarios
+from planos.app.api.routes import (
+    agents,
+    approvals,
+    auth,
+    jobs,
+    knowledge,
+    plans,
+    runs,
+    scenarios,
+    system,
+)
 from planos.app.core.config import settings
 from planos.app.core.exceptions import (
     ConflictError,
     ForbiddenError,
+    IdempotencyError,
     NotFoundError,
     PlanOSError,
-    TenantIsolationError,
     UnauthorizedError,
     ValidationError,
 )
 from planos.app.core.logging import configure_logging, get_logger
+from planos.app.core.middleware import RequestContextMiddleware
 
 logger = get_logger(__name__)
 
@@ -46,6 +57,7 @@ def create_app() -> FastAPI:
     )
 
     # CORS
+    app.add_middleware(RequestContextMiddleware)
     app.add_middleware(
         CORSMiddleware,
         allow_origins=["*"] if settings.debug else [],
@@ -62,11 +74,11 @@ def create_app() -> FastAPI:
             status_code = status.HTTP_404_NOT_FOUND
         elif isinstance(exc, UnauthorizedError):
             status_code = status.HTTP_401_UNAUTHORIZED
-        elif isinstance(exc, (ForbiddenError, TenantIsolationError)):
+        elif isinstance(exc, ForbiddenError):
             status_code = status.HTTP_403_FORBIDDEN
         elif isinstance(exc, ValidationError):
             status_code = status.HTTP_422_UNPROCESSABLE_ENTITY
-        elif isinstance(exc, ConflictError):
+        elif isinstance(exc, (ConflictError, IdempotencyError)):
             status_code = status.HTTP_409_CONFLICT
 
         return JSONResponse(
@@ -75,6 +87,7 @@ def create_app() -> FastAPI:
                 "error": {
                     "code": exc.code,
                     "message": exc.message,
+                    "request_id": getattr(request.state, "request_id", ""),
                 }
             },
         )
@@ -105,7 +118,13 @@ def create_app() -> FastAPI:
     app.include_router(auth.router, prefix="/api/v1")
     app.include_router(plans.router, prefix="/api/v1")
     app.include_router(scenarios.router, prefix="/api/v1")
+    app.include_router(jobs.router, prefix="/api/v1")
     app.include_router(runs.router, prefix="/api/v1")
+    app.include_router(agents.router, prefix="/api/v1")
+    app.include_router(approvals.router, prefix="/api/v1")
+    app.include_router(knowledge.router, prefix="/api/v1")
+    app.include_router(system.router, prefix="/api/v1")
+    app.include_router(system.router)
 
     return app
 

@@ -3,8 +3,10 @@
 from __future__ import annotations
 
 import time
+import uuid
+from collections.abc import Callable
 from dataclasses import dataclass, field
-from typing import Any, Callable
+from datetime import UTC, datetime
 
 from planos.app.evaluation.models import EvalCase, EvalReport, EvalResult
 
@@ -27,7 +29,12 @@ class Evaluator:
             tools_correct = all(t in case.expected_tools for t in tools_selected)
 
             output_valid = True
-            for prop in case.expected_output_properties:
+            expected = case.expected_output_properties
+            if isinstance(expected, dict):
+                props = list(expected.keys())
+            else:
+                props = list(expected)
+            for prop in props:
                 if prop not in response.get("output", {}):
                     output_valid = False
                     break
@@ -79,13 +86,15 @@ class Evaluator:
             agent_name=self.agent_name,
             model=self.model,
             prompt_version=self.prompt_version,
-            timestamp=datetime.now(timezone.utc).isoformat(),
+            timestamp=datetime.now(UTC).isoformat(),
             total_cases=total,
             successful_cases=successful,
             failed_cases=total - successful,
             task_success_rate=successful / total if total > 0 else 0,
             tool_accuracy=sum(1 for r in results if r.tools_correct) / total if total > 0 else 0,
-            policy_violation_rate=sum(r.policy_violations for r in results) / total if total > 0 else 0,
+            policy_violation_rate=sum(r.policy_violations for r in results) / total
+            if total > 0
+            else 0,
             avg_latency_ms=sum(latencies) / len(latencies) if latencies else 0,
             p50_latency_ms=percentile(latencies, 0.5),
             p95_latency_ms=percentile(latencies, 0.95),
@@ -98,13 +107,13 @@ class Evaluator:
         """Generate markdown report."""
         lines = [
             f"# Evaluation Report: {report.agent_name}",
-            f"",
+            "",
             f"**Model**: {report.model} | **Prompt**: {report.prompt_version} | **Date**: {report.timestamp}",
-            f"",
-            f"## Summary",
-            f"",
-            f"| Metric | Value |",
-            f"|--------|-------|",
+            "",
+            "## Summary",
+            "",
+            "| Metric | Value |",
+            "|--------|-------|",
             f"| Total Cases | {report.total_cases} |",
             f"| Successful | {report.successful_cases} |",
             f"| Failed | {report.failed_cases} |",
@@ -118,8 +127,3 @@ class Evaluator:
             f"| Avg Tokens | {report.avg_tokens:.0f} |",
         ]
         return "\n".join(lines)
-
-
-
-import uuid
-from datetime import datetime, timezone

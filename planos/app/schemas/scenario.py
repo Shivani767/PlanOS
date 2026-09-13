@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Any, Optional
+from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -11,7 +11,7 @@ from pydantic import BaseModel, ConfigDict, Field
 class ScenarioCreate(BaseModel):
     name: str = Field(..., min_length=1, max_length=255)
     base_plan_id: str
-    description: Optional[str] = None
+    description: str | None = None
     changes: dict[str, Any] = Field(default_factory=dict)
 
 
@@ -22,10 +22,10 @@ class ScenarioResponse(BaseModel):
     organization_id: str
     base_plan_id: str
     name: str
-    description: Optional[str]
+    description: str | None
     status: str
     changes: dict[str, Any]
-    results: Optional[dict[str, Any]]
+    results: dict[str, Any] | None
     created_at: datetime
     updated_at: datetime
 

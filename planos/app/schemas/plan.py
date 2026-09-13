@@ -3,20 +3,20 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Any, Optional
+from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field
 
 
 class PlanCreate(BaseModel):
     name: str = Field(..., min_length=1, max_length=255)
-    description: Optional[str] = None
+    description: str | None = None
 
 
 class PlanUpdate(BaseModel):
-    name: Optional[str] = Field(None, min_length=1, max_length=255)
-    description: Optional[str] = None
-    status: Optional[str] = Field(None, pattern=r"^(draft|active|archived)$")
+    name: str | None = Field(None, min_length=1, max_length=255)
+    description: str | None = None
+    status: str | None = Field(None, pattern=r"^(draft|active|archived)$")
     expected_version: int = Field(..., ge=1)
 
 
@@ -40,7 +40,7 @@ class PlanResponse(BaseModel):
     id: str
     organization_id: str
     name: str
-    description: Optional[str]
+    description: str | None
     status: str
     current_version: int
     created_at: datetime

@@ -2,60 +2,23 @@
 
 from __future__ import annotations
 
+import uuid
+
 import pytest
-from httpx import AsyncClient, ASGITransport
-from sqlalchemy.ext.asyncio import AsyncSession
-
-from planos.app.main import create_app
-from planos.app.db.session import async_session_factory, engine, Base
-from planos.app.models import Organization, User
-from planos.app.core.security import hash_password, create_access_token
-
-
-@pytest.fixture
-async def client():
-    app = create_app()
-    transport = ASGITransport(app=app)
-    async with AsyncClient(transport=transport, base_url="http://test") as ac:
-        yield ac
-
-
-@pytest.fixture
-async def test_org_and_user():
-    async with async_session_factory() as session:
-        org = Organization(name="Test Org Scenarios", slug="test-org-scenarios")
-        session.add(org)
-        await session.flush()
-
-        user = User(
-            organization_id=org.id,
-            email="scenarios@example.com",
-            hashed_password=hash_password("testpass123"),
-            full_name="Scenarios User",
-            role="ADMIN",
-        )
-        session.add(user)
-        await session.commit()
-
-        token = create_access_token(user.id)
-        yield {"org": org, "user": user, "token": token}
-        await session.close()
 
 
 async def _create_plan(client, headers: dict) -> str:
-    """Helper to create a plan and return its ID."""
-    resp = await client.post(
-        "/api/v1/plans",
-        headers=headers,
-        json={"name": "Base Plan for Scenario"},
-    )
+    """Create a baseline plan and return its ID."""
+    resp = await client.post("/api/v1/plans", headers=headers,
+                             json={"name": f"Baseline {uuid.uuid4().hex[:6]}"})
+    assert resp.status_code == 201, resp.text
     return resp.json()["id"]
 
 
 @pytest.mark.asyncio
-async def test_create_scenario(client, test_org_and_user):
+async def test_create_scenario(client, unique_org_user):
     """Test scenario creation."""
-    headers = {"Authorization": f"Bearer {test_org_and_user['token']}"}
+    headers = {"Authorization": f"Bearer {unique_org_user['token']}"}
     plan_id = await _create_plan(client, headers)
 
     response = await client.post(
@@ -75,9 +38,9 @@ async def test_create_scenario(client, test_org_and_user):
 
 
 @pytest.mark.asyncio
-async def test_list_scenarios(client, test_org_and_user):
+async def test_list_scenarios(client, unique_org_user):
     """Test listing scenarios."""
-    headers = {"Authorization": f"Bearer {test_org_and_user['token']}"}
+    headers = {"Authorization": f"Bearer {unique_org_user['token']}"}
     plan_id = await _create_plan(client, headers)
 
     await client.post(
@@ -97,9 +60,9 @@ async def test_list_scenarios(client, test_org_and_user):
 
 
 @pytest.mark.asyncio
-async def test_get_scenario(client, test_org_and_user):
+async def test_get_scenario(client, unique_org_user):
     """Test getting a specific scenario."""
-    headers = {"Authorization": f"Bearer {test_org_and_user['token']}"}
+    headers = {"Authorization": f"Bearer {unique_org_user['token']}"}
     plan_id = await _create_plan(client, headers)
 
     create_resp = await client.post(
@@ -119,9 +82,9 @@ async def test_get_scenario(client, test_org_and_user):
 
 
 @pytest.mark.asyncio
-async def test_run_scenario_returns_job_id(client, test_org_and_user):
+async def test_run_scenario_returns_job_id(client, unique_org_user):
     """Test scenario run returns job ID immediately."""
-    headers = {"Authorization": f"Bearer {test_org_and_user['token']}"}
+    headers = {"Authorization": f"Bearer {unique_org_user['token']}"}
     plan_id = await _create_plan(client, headers)
 
     scenario_resp = await client.post(
@@ -139,16 +102,16 @@ async def test_run_scenario_returns_job_id(client, test_org_and_user):
         f"/api/v1/scenarios/{scenario_id}/run",
         headers=headers,
     )
-    assert response.status_code == 200
+    assert response.status_code == 202
     data = response.json()
     assert "job_id" in data
     assert data["status"] == "queued"
 
 
 @pytest.mark.asyncio
-async def test_run_scenario_invalid_plan(client, test_org_and_user):
+async def test_run_scenario_invalid_plan(client, unique_org_user):
     """Test scenario creation with non-existent plan fails."""
-    headers = {"Authorization": f"Bearer {test_org_and_user['token']}"}
+    headers = {"Authorization": f"Bearer {unique_org_user['token']}"}
 
     response = await client.post(
         "/api/v1/scenarios",
@@ -163,9 +126,9 @@ async def test_run_scenario_invalid_plan(client, test_org_and_user):
 
 
 @pytest.mark.asyncio
-async def test_delete_scenario(client, test_org_and_user):
+async def test_delete_scenario(client, unique_org_user):
     """Test scenario deletion."""
-    headers = {"Authorization": f"Bearer {test_org_and_user['token']}"}
+    headers = {"Authorization": f"Bearer {unique_org_user['token']}"}
     plan_id = await _create_plan(client, headers)
 
     create_resp = await client.post(

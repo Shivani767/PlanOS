@@ -2,17 +2,10 @@
 
 from __future__ import annotations
 
-from typing import Optional
-
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from planos.app.core.exceptions import (
-    ConflictError,
-    NotFoundError,
-    OptimisticLockError,
-    TenantIsolationError,
-)
+from planos.app.core.exceptions import NotFoundError, OptimisticLockError
 from planos.app.core.logging import get_logger
 from planos.app.models import Plan, PlanVersion
 from planos.app.schemas.plan import PlanCreate, PlanUpdate
@@ -37,6 +30,8 @@ class PlanService:
             created_by=user_id,
         )
         self.session.add(plan)
+        # Flush so plan.id exists before referencing it in the version row.
+        await self.session.flush()
 
         # Create initial version
         version = PlanVersion(
@@ -55,14 +50,12 @@ class PlanService:
 
     async def get_by_id(self, plan_id: str, organization_id: str) -> Plan:
         """Get plan by ID with tenant isolation check."""
-        result = await self.session.execute(
-            select(Plan).where(Plan.id == plan_id)
-        )
+        result = await self.session.execute(select(Plan).where(Plan.id == plan_id))
         plan = result.scalar_one_or_none()
         if not plan:
             raise NotFoundError("Plan", plan_id)
         if plan.organization_id != organization_id:
-            raise TenantIsolationError()
+            raise NotFoundError("Plan", plan_id)
         return plan
 
     async def list_plans(
@@ -70,7 +63,7 @@ class PlanService:
         organization_id: str,
         page: int = 1,
         page_size: int = 20,
-        status: Optional[str] = None,
+        status: str | None = None,
     ) -> tuple[list[Plan], int]:
         """List plans for an organization with pagination."""
         query = select(Plan).where(Plan.organization_id == organization_id)
@@ -85,7 +78,9 @@ class PlanService:
         total = len(total_result.scalars().all())
 
         # Get paginated results
-        query = query.order_by(Plan.created_at.desc()).offset((page - 1) * page_size).limit(page_size)
+        query = (
+            query.order_by(Plan.created_at.desc()).offset((page - 1) * page_size).limit(page_size)
+        )
         result = await self.session.execute(query)
         plans = list(result.scalars().all())
 
@@ -134,3 +129,14 @@ class PlanService:
             org_id=organization_id,
         )
         return plan
+
+    async def delete(self, plan_id: str, organization_id: str, user_id: str) -> None:
+        """Delete a plan (hard delete; DB cascades versions + planning data)."""
+        plan = await self.get_by_id(plan_id, organization_id)
+        await self.session.delete(plan)
+        try:
+            await self.session.commit()
+        except Exception:
+            await self.session.rollback()
+            raise
+        logger.info("plan_deleted", plan_id=plan_id, org_id=organization_id, user_id=user_id)

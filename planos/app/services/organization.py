@@ -33,9 +33,7 @@ class OrganizationService:
 
     async def get_by_id(self, org_id: str) -> Organization:
         """Get organization by ID."""
-        result = await self.session.execute(
-            select(Organization).where(Organization.id == org_id)
-        )
+        result = await self.session.execute(select(Organization).where(Organization.id == org_id))
         org = result.scalar_one_or_none()
         if not org:
             raise NotFoundError("Organization", org_id)
@@ -43,7 +41,5 @@ class OrganizationService:
 
     async def get_by_slug(self, slug: str) -> Organization | None:
         """Get organization by slug."""
-        result = await self.session.execute(
-            select(Organization).where(Organization.slug == slug)
-        )
+        result = await self.session.execute(select(Organization).where(Organization.slug == slug))
         return result.scalar_one_or_none()

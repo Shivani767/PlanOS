@@ -47,7 +47,6 @@ class PlanningEngine:
     ) -> float:
         """Inventory requirement = forecast_demand × safety_factor"""
         return forecast_demand * safety_factor
-        return forecast_demand * safety_factor
 
     @staticmethod
     def apply_scenario_changes(
@@ -59,7 +58,7 @@ class PlanningEngine:
         new_price = baseline.price * (1 + changes.price_change)
 
         new_cost_per_unit = baseline.cost / baseline.units if baseline.units > 0 else 0
-        new_cost_per_unit *= (1 + changes.cost_change)
+        new_cost_per_unit *= 1 + changes.cost_change
         new_cost = new_units * new_cost_per_unit if baseline.units > 0 else baseline.cost
 
         new_revenue = PlanningEngine.calculate_revenue(new_units, new_price)
@@ -77,7 +76,8 @@ class PlanningEngine:
             capacity=new_capacity,
             inventory=new_inventory,
             marketing_budget=new_marketing,
-            operating_expenses=baseline.operating_expenses + (new_marketing - baseline.marketing_budget),
+            operating_expenses=baseline.operating_expenses
+            + (new_marketing - baseline.marketing_budget),
         )
 
     @staticmethod
@@ -90,7 +90,7 @@ class PlanningEngine:
         results = []
         for i, baseline in enumerate(baseline_metrics):
             scenario = PlanningEngine.apply_scenario_changes(baseline, changes)
-            label = period_labels[i] if i < len(period_labels) else f"period_{i+1}"
+            label = period_labels[i] if i < len(period_labels) else f"period_{i + 1}"
 
             result = CalculationResult(
                 period_label=label,
@@ -127,14 +127,16 @@ class PlanningEngine:
             "total_revenue_delta": total_scenario_revenue - total_baseline_revenue,
             "total_revenue_delta_pct": (
                 ((total_scenario_revenue - total_baseline_revenue) / total_baseline_revenue * 100)
-                if total_baseline_revenue != 0 else 0.0
+                if total_baseline_revenue != 0
+                else 0.0
             ),
             "total_baseline_profit": total_baseline_profit,
             "total_scenario_profit": total_scenario_profit,
             "total_profit_delta": total_scenario_profit - total_baseline_profit,
             "total_profit_delta_pct": (
                 ((total_scenario_profit - total_baseline_profit) / abs(total_baseline_profit) * 100)
-                if total_baseline_profit != 0 else 0.0
+                if total_baseline_profit != 0
+                else 0.0
             ),
             "total_baseline_cost": total_baseline_cost,
             "total_scenario_cost": total_scenario_cost,
@@ -143,4 +145,3 @@ class PlanningEngine:
             "total_scenario_units": total_scenario_units,
             "total_units_delta": total_scenario_units - total_baseline_units,
         }
-

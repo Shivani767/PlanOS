@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any, Optional
+from typing import Any
 
 from pydantic import BaseModel, Field
 
@@ -29,17 +29,17 @@ class ImportStatusResponse(BaseModel):
     records_received: int
     records_valid: int
     records_invalid: int
-    error_summary: Optional[str] = None
+    error_summary: str | None = None
 
 
 class ApprovalCreateRequest(BaseModel):
     action_type: str
     action_details: dict[str, Any] = Field(default_factory=dict)
-    reason: Optional[str] = None
+    reason: str | None = None
 
 
 class ApprovalDecisionRequest(BaseModel):
-    decision_reason: Optional[str] = None
+    decision_reason: str | None = None
 
 
 class ApprovalResponse(BaseModel):
@@ -48,6 +48,6 @@ class ApprovalResponse(BaseModel):
     action_type: str
     action_details: dict[str, Any]
     status: str
-    reason: Optional[str] = None
-    decision_reason: Optional[str] = None
+    reason: str | None = None
+    decision_reason: str | None = None
     created_at: str

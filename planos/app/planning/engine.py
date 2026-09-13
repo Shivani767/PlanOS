@@ -8,12 +8,13 @@ All formulas are deterministic and testable.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any, Optional
+from typing import Any
 
 
 @dataclass
 class PlanningMetrics:
     """Core planning metrics for a single dimension combination."""
+
     units: float = 0.0
     price: float = 0.0
     cost: float = 0.0
@@ -48,6 +49,7 @@ class PlanningMetrics:
 @dataclass
 class ScenarioChanges:
     """Changes to apply in a scenario."""
+
     demand_growth: float = 0.0
     marketing_budget_multiplier: float = 1.0
     supplier_capacity_multiplier: float = 1.0
@@ -70,6 +72,7 @@ class ScenarioChanges:
 @dataclass
 class CalculationResult:
     """Result of a scenario calculation."""
+
     period_label: str
     baseline: PlanningMetrics
     scenario: PlanningMetrics

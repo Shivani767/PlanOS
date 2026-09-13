@@ -3,43 +3,41 @@
 from __future__ import annotations
 
 import pytest
-from httpx import AsyncClient, ASGITransport
+import pytest_asyncio
+from sqlalchemy.ext.asyncio import AsyncSession
 
-from planos.app.main import create_app
-from planos.app.db.session import async_session_factory
+from planos.app.core.security import create_access_token, hash_password
 from planos.app.models import Organization, User
-from planos.app.core.security import hash_password, create_access_token
 
 
-@pytest.fixture
-async def client():
-    app = create_app()
-    transport = ASGITransport(app=app)
-    async with AsyncClient(transport=transport, base_url="http://test") as ac:
-        yield ac
+@pytest_asyncio.fixture
+async def two_orgs(session: AsyncSession) -> dict:
+    """Two isolated organizations with unique slugs (collision-free across runs)."""
+    import uuid
 
+    slug_a = f"org-a-{uuid.uuid4().hex[:10]}"
+    slug_b = f"org-b-{uuid.uuid4().hex[:10]}"
+    org_a = Organization(name="Org A", slug=slug_a)
+    org_b = Organization(name="Org B", slug=slug_b)
+    session.add_all([org_a, org_b])
+    await session.flush()
 
-@pytest.fixture
-async def two_orgs():
-    async with async_session_factory() as session:
-        org_a = Organization(name="Org A", slug="org-a-sec")
-        org_b = Organization(name="Org B", slug="org-b-sec")
-        session.add_all([org_a, org_b])
-        await session.flush()
+    user_a = User(organization_id=org_a.id, email=f"admin-{uuid.uuid4().hex[:8]}@org-a.com",
+                  hashed_password=hash_password("password123"),
+                  full_name="Admin A", role="ADMIN")
+    user_b = User(organization_id=org_b.id, email=f"admin-{uuid.uuid4().hex[:8]}@org-b.com",
+                  hashed_password=hash_password("password123"),
+                  full_name="Admin B", role="ADMIN")
+    session.add_all([user_a, user_b])
+    await session.commit()
+    await session.refresh(org_a)
+    await session.refresh(org_b)
+    await session.refresh(user_a)
+    await session.refresh(user_b)
 
-        user_a = User(organization_id=org_a.id, email="admin@org-a.com",
-                      hashed_password=hash_password("password123"),
-                      full_name="Admin A", role="ADMIN")
-        user_b = User(organization_id=org_b.id, email="admin@org-b.com",
-                      hashed_password=hash_password("password123"),
-                      full_name="Admin B", role="ADMIN")
-        session.add_all([user_a, user_b])
-        await session.commit()
-
-        token_a = create_access_token(user_a.id)
-        token_b = create_access_token(user_b.id)
-        yield {"org_a": org_a.id, "org_b": org_b.id, "token_a": token_a, "token_b": token_b}
-        await session.close()
+    token_a = create_access_token(user_a.id)
+    token_b = create_access_token(user_b.id)
+    yield {"org_a": org_a.id, "org_b": org_b.id, "token_a": token_a, "token_b": token_b}
 
 
 async def _create_plan(client, headers: dict) -> str:
@@ -80,14 +78,14 @@ async def test_cross_tenant_delete_denied(client, two_orgs):
 
 
 @pytest.mark.asyncio
-async def test_viewer_cannot_create_plan(client, two_orgs):
-    async with async_session_factory() as session:
-        viewer = User(organization_id=two_orgs["org_a"], email="viewer@org-a.com",
-                      hashed_password=hash_password("password123"),
-                      full_name="Viewer", role="VIEWER")
-        session.add(viewer)
-        await session.commit()
-        token = create_access_token(viewer.id)
+async def test_viewer_cannot_create_plan(client, session, two_orgs):
+    viewer = User(organization_id=two_orgs["org_a"], email="viewer@org-a.com",
+                  hashed_password=hash_password("password123"),
+                  full_name="Viewer", role="VIEWER")
+    session.add(viewer)
+    await session.commit()
+    await session.refresh(viewer)
+    token = create_access_token(viewer.id)
     headers = {"Authorization": f"Bearer {token}"}
     resp = await client.post("/api/v1/plans", headers=headers, json={"name": "Test"})
     assert resp.status_code == 403

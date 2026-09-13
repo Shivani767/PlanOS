@@ -2,24 +2,24 @@
 
 from __future__ import annotations
 
-import json
-import time
-import uuid
-from dataclasses import dataclass, field
-from datetime import datetime, timezone
-from typing import Any, Optional
+from typing import Any
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
+
+PropList = list[str] | dict[str, Any] | set[str]
 
 
 class EvalCase(BaseModel):
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+
     """Single evaluation case."""
+
     id: str
     name: str
     description: str
     input: str
     expected_tools: list[str]
-    expected_output_properties: dict[str, Any] = {}
+    expected_output_properties: PropList = {}
     allowed_tools: list[str] = []
     tags: list[str] = []
     difficulty: str = "medium"
@@ -27,6 +27,7 @@ class EvalCase(BaseModel):
 
 class EvalResult(BaseModel):
     """Result of running a single evaluation case."""
+
     case_id: str
     success: bool
     tools_selected: list[str]
@@ -35,12 +36,13 @@ class EvalResult(BaseModel):
     policy_violations: int = 0
     latency_ms: float = 0.0
     tokens_used: int = 0
-    error: Optional[str] = None
+    error: str | None = None
     details: dict[str, Any] = {}
 
 
 class EvalReport(BaseModel):
     """Complete evaluation report."""
+
     run_id: str
     agent_name: str
     model: str

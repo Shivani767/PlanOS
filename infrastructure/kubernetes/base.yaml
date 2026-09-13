@@ -104,7 +104,7 @@ spec:
     spec:
       containers:
         - name: worker
-          image: planos:llatest
+          image: planos:latest
           command: ["celery", "-A", "planos.app.workers.celery_app", "worker", "--loglevel=info"]
           envFrom:
             - configMapRef:

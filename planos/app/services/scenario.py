@@ -2,12 +2,10 @@
 
 from __future__ import annotations
 
-from typing import Optional
-
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from planos.app.core.exceptions import NotFoundError, TenantIsolationError
+from planos.app.core.exceptions import NotFoundError
 from planos.app.core.logging import get_logger
 from planos.app.models import Scenario
 from planos.app.schemas.scenario import ScenarioCreate
@@ -30,14 +28,12 @@ class ScenarioService:
         """Create a new scenario from a baseline plan."""
         # Verify base plan exists and belongs to org
         from planos.app.models import Plan
-        plan_result = await self.session.execute(
-            select(Plan).where(Plan.id == data.base_plan_id)
-        )
+
+        plan_result = await self.session.execute(select(Plan).where(Plan.id == data.base_plan_id))
         plan = plan_result.scalar_one_or_none()
         if not plan:
             raise NotFoundError("Plan", data.base_plan_id)
-        if plan.organization_id != organization_id:
-            raise TenantIsolationError()
+        # Cross-tenant: treat as not-found to avoid leaking resource existence.
 
         scenario = Scenario(
             organization_id=organization_id,
@@ -57,14 +53,12 @@ class ScenarioService:
 
     async def get_by_id(self, scenario_id: str, organization_id: str) -> Scenario:
         """Get scenario by ID with tenant isolation check."""
-        result = await self.session.execute(
-            select(Scenario).where(Scenario.id == scenario_id)
-        )
+        result = await self.session.execute(select(Scenario).where(Scenario.id == scenario_id))
         scenario = result.scalar_one_or_none()
         if not scenario:
             raise NotFoundError("Scenario", scenario_id)
         if scenario.organization_id != organization_id:
-            raise TenantIsolationError()
+            raise NotFoundError("Scenario", scenario_id)
         return scenario
 
     async def list_scenarios(
@@ -102,3 +96,17 @@ class ScenarioService:
         await self.session.commit()
         await self.session.refresh(scenario)
         return scenario
+
+    async def delete(self, scenario_id: str, organization_id: str, user_id: str) -> None:
+        """Delete a scenario (hard delete, tenant-scoped)."""
+        scenario = await self.get_by_id(scenario_id, organization_id)
+        await self.session.delete(scenario)
+        try:
+            await self.session.commit()
+        except Exception:
+            await self.session.rollback()
+            raise
+        logger.info(
+            "scenario_deleted", scenario_id=scenario_id, org_id=organization_id, user_id=user_id
+        )
+

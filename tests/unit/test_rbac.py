@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import pytest
-
 from planos.app.core.permissions import (
     Permission,
     Role,
