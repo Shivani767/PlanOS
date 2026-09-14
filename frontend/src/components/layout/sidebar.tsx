@@ -2,13 +2,14 @@ import { NavLink } from 'react-router-dom'
 import { cn } from '../../lib/utils'
 import { useAuth } from '../../context/AuthContext'
 import {
-  LayoutDashboard, FolderKanban, GitBranch, Bot, ShieldCheck,
+  LayoutDashboard, FolderKanban, GitBranch, Sparkles, Bot, ShieldCheck,
   BarChart3, Upload, ScrollText, Settings, LogOut, ChevronLeft, ChevronRight,
 } from 'lucide-react'
 import { Button } from '../ui/button'
 
 const navItems = [
   { to: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
+  { to: '/agent', icon: Sparkles, label: 'Planning Copilot' },
   { to: '/plans', icon: FolderKanban, label: 'Plans' },
   { to: '/scenarios', icon: GitBranch, label: 'Scenarios' },
   { to: '/agent-runs', icon: Bot, label: 'Agent Runs' },

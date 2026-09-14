@@ -31,8 +31,13 @@ class TestScenarioChanges:
 
     def test_apply_combined_changes(self):
         baseline = PlanningMetrics(
-            units=100, price=50, cost=3000, revenue=5000,
-            marketing_budget=10000, capacity=1000, operating_expenses=5000,
+            units=100,
+            price=50,
+            cost=3000,
+            revenue=5000,
+            marketing_budget=10000,
+            capacity=1000,
+            operating_expenses=5000,
         )
         changes = ScenarioChanges(
             demand_growth=0.15,

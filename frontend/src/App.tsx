@@ -10,6 +10,7 @@ import { ScenariosPage } from './pages/scenarios'
 import { ScenarioDetailPage } from './pages/scenario-detail'
 import { AgentRunsPage } from './pages/agent-runs'
 import { AgentRunDetailPage } from './pages/agent-run-detail'
+import AgentCopilot from './pages/agent-copilot'
 import { ApprovalsPage } from './pages/approvals'
 import { EvaluationsPage } from './pages/evaluations'
 import { ImportsPage } from './pages/imports'
@@ -37,6 +38,7 @@ export default function App() {
           <AppLayout>
             <Routes>
               <Route path="/dashboard" element={<DashboardPage />} />
+              <Route path="/agent" element={<AgentCopilot />} />
               <Route path="/plans" element={<PlansPage />} />
               <Route path="/plans/:id" element={<PlanDetailPage />} />
               <Route path="/scenarios" element={<ScenariosPage />} />

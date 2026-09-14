@@ -9,8 +9,9 @@ import pytest
 
 async def _create_plan(client, headers: dict) -> str:
     """Create a baseline plan and return its ID."""
-    resp = await client.post("/api/v1/plans", headers=headers,
-                             json={"name": f"Baseline {uuid.uuid4().hex[:6]}"})
+    resp = await client.post(
+        "/api/v1/plans", headers=headers, json={"name": f"Baseline {uuid.uuid4().hex[:6]}"}
+    )
     assert resp.status_code == 201, resp.text
     return resp.json()["id"]
 

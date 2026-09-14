@@ -22,12 +22,20 @@ async def two_orgs(session: AsyncSession) -> dict:
     session.add_all([org_a, org_b])
     await session.flush()
 
-    user_a = User(organization_id=org_a.id, email=f"admin-{uuid.uuid4().hex[:8]}@org-a.com",
-                  hashed_password=hash_password("password123"),
-                  full_name="Admin A", role="ADMIN")
-    user_b = User(organization_id=org_b.id, email=f"admin-{uuid.uuid4().hex[:8]}@org-b.com",
-                  hashed_password=hash_password("password123"),
-                  full_name="Admin B", role="ADMIN")
+    user_a = User(
+        organization_id=org_a.id,
+        email=f"admin-{uuid.uuid4().hex[:8]}@org-a.com",
+        hashed_password=hash_password("password123"),
+        full_name="Admin A",
+        role="ADMIN",
+    )
+    user_b = User(
+        organization_id=org_b.id,
+        email=f"admin-{uuid.uuid4().hex[:8]}@org-b.com",
+        hashed_password=hash_password("password123"),
+        full_name="Admin B",
+        role="ADMIN",
+    )
     session.add_all([user_a, user_b])
     await session.commit()
     await session.refresh(org_a)
@@ -60,7 +68,8 @@ async def test_cross_tenant_update_denied(client, two_orgs):
     headers_b = {"Authorization": f"Bearer {two_orgs['token_b']}"}
     plan_id = await _create_plan(client, headers_a)
     resp = await client.patch(
-        f"/api/v1/plans/{plan_id}", headers=headers_b,
+        f"/api/v1/plans/{plan_id}",
+        headers=headers_b,
         json={"name": "Hacked", "expected_version": 1},
     )
     assert resp.status_code == 404
@@ -79,9 +88,13 @@ async def test_cross_tenant_delete_denied(client, two_orgs):
 
 @pytest.mark.asyncio
 async def test_viewer_cannot_create_plan(client, session, two_orgs):
-    viewer = User(organization_id=two_orgs["org_a"], email="viewer@org-a.com",
-                  hashed_password=hash_password("password123"),
-                  full_name="Viewer", role="VIEWER")
+    viewer = User(
+        organization_id=two_orgs["org_a"],
+        email="viewer@org-a.com",
+        hashed_password=hash_password("password123"),
+        full_name="Viewer",
+        role="VIEWER",
+    )
     session.add(viewer)
     await session.commit()
     await session.refresh(viewer)

@@ -1,6 +1,15 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { api, getErrorMessage, type PaginatedResponse } from '../lib/api'
-import type { Plan, Scenario, AgentRun, ApprovalRequest, AuditLog, ImportJob } from '../types'
+import type {
+  Plan,
+  Scenario,
+  AgentRun,
+  AgentToolInfo,
+  ApprovalRequest,
+  AuditLog,
+  ImportJob,
+  PlanWorkflowResponse,
+} from '../types'
 
 // Plans
 export function usePlans(page = 1, size = 20) {
@@ -95,11 +104,13 @@ export function useRunScenario() {
 
 // Agent Runs
 export function useAgentRuns(page = 1, size = 20) {
+  const limit = size;
+  const offset = (page - 1) * size;
   return useQuery({
-    queryKey: ['agent-runs', page, size],
+    queryKey: ['agent-runs', limit, offset],
     queryFn: async () => {
-      const res = await api.get<PaginatedResponse<AgentRun>>('/runs', { params: { page, size } })
-      return res.data
+      const res = await api.get<AgentRun[]>('/agents/runs', { params: { limit, offset } });
+      return { items: res.data, total: res.data.length, page, page_size: size };
     },
   })
 }
@@ -108,12 +119,50 @@ export function useAgentRun(id: string) {
   return useQuery({
     queryKey: ['agent-run', id],
     queryFn: async () => {
-      const res = await api.get<AgentRun>(`/runs/${id}`)
+      const res = await api.get<AgentRun>(`/agents/runs/${id}`)
       return res.data
     },
     enabled: !!id,
   })
 }
+
+export function useAgentTools() {
+  return useQuery({
+    queryKey: ['agent-tools'],
+    queryFn: async () => {
+      const res = await api.get<AgentToolInfo[]>('/agents/tools')
+      return res.data
+    },
+  })
+}
+
+export function useAgentTrace(runId: string) {
+  return useQuery({
+    queryKey: ['agent-trace', runId],
+    queryFn: async () => {
+      const res = await api.get<Record<string, unknown>>(`/agents/runs/${runId}/trace`)
+      return res.data
+    },
+    enabled: !!runId,
+  })
+}
+
+// Agent workflow (planner → analyst → executor → reviewer)
+export function useRunAgentWorkflow() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async (data: { plan_id: string; goal: string }) => {
+      const res = await api.post<PlanWorkflowResponse>('/agents/plan', data)
+      return res.data
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['agent-runs'] })
+      qc.invalidateQueries({ queryKey: ['scenarios'] })
+      qc.invalidateQueries({ queryKey: ['audit-logs'] })
+    },
+  })
+}
+
 
 // Approvals
 export function useApprovals(page = 1, size = 20) {

@@ -1,4 +1,10 @@
 import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios'
+import type {
+  AgentRun,
+  AgentToolInfo,
+  PlanWorkflowRequest,
+  PlanWorkflowResponse,
+} from '../types'
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api/v1'
 
@@ -57,4 +63,37 @@ export function getErrorMessage(error: unknown, fallback = 'An error occurred'):
     if (error.code === 'ERR_NETWORK') return 'Network error. Please check your connection.'
   }
   return fallback
+}
+
+
+export const agentsApi = {
+  /** List agent runs (newest first). */
+  listRuns: async (limit = 20, offset = 0): Promise<AgentRun[]> => {
+    const { data } = await api.get<AgentRun[]>('/agents/runs', { params: { limit, offset } })
+    return data
+  },
+
+  /** Get a single agent run (includes persisted steps). */
+  getRun: async (runId: string): Promise<AgentRun> => {
+    const { data } = await api.get<AgentRun>(`/agents/runs/${runId}`)
+    return data
+  },
+
+  /** Get full execution trace for a run. */
+  getTrace: async (runId: string): Promise<Record<string, unknown>> => {
+    const { data } = await api.get(`/agents/runs/${runId}/trace`)
+    return data
+  },
+
+  /** Run the flagship planning workflow (planner → analyst → executor → reviewer). */
+  runWorkflow: async (request: PlanWorkflowRequest): Promise<PlanWorkflowResponse> => {
+    const { data } = await api.post<PlanWorkflowResponse>('/agents/plan', request)
+    return data
+  },
+
+  /** List tools visible to the caller's role. */
+  listTools: async (): Promise<AgentToolInfo[]> => {
+    const { data } = await api.get<AgentToolInfo[]>('/agents/tools')
+    return data
+  },
 }

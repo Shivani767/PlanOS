@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import type { AgentRun } from '../types'
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
 import { Badge } from '../components/ui/badge'
 import { Button } from '../components/ui/button'
@@ -16,15 +17,49 @@ export function DashboardPage() {
   const plans = plansData?.items ?? []
   const scenarios = scenariosData?.items ?? []
   const recentRuns = runsData?.items ?? []
+
   return (
     <div className="space-y-6">
-      <PageHeader title="Dashboard" description="Overview of your planning workspace"
-        actions={<Link to="/plans"><Button><Plus className="mr-2 h-4 w-4" /> New Plan</Button></Link>} />
+      <PageHeader
+        title="Dashboard"
+        description="Overview of your planning workspace"
+        actions={
+          <Link to="/plans">
+            <Button>
+              <Plus className="mr-2 h-4 w-4" /> New Plan
+            </Button>
+          </Link>
+        }
+      />
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <StatCard to="/plans" title="Total Plans" value={plans.length} extra={`${plans.filter(p => p.status === 'active').length} active`} icon={FolderKanban} />
-        <StatCard to="/scenarios" title="Scenarios" value={scenarios.length} extra={`${scenarios.filter(s => s.status === 'completed').length} completed`} icon={GitBranch} />
-        <StatCard to="/agent-runs" title="Agent Runs" value={runsData?.total ?? 0} extra={`${recentRuns.filter(r => r.status === 'running').length} running`} icon={Bot} />
-        <StatCard to="/approvals" title="Pending Approvals" value={0} extra="No action needed" icon={TrendingUp} />
+        <StatCard
+          to="/plans"
+          title="Total Plans"
+          value={plans.length}
+          extra={`${plans.filter((p) => p.status === "active").length} active`}
+          icon={FolderKanban}
+        />
+        <StatCard
+          to="/scenarios"
+          title="Scenarios"
+          value={scenarios.length}
+          extra={`${scenarios.filter((s) => s.status === "completed").length} completed`}
+          icon={GitBranch}
+        />
+        <StatCard
+          to="/agent-runs"
+          title="Agent Runs"
+          value={runsData?.total ?? 0}
+          extra={`${recentRuns.filter((r) => r.status === "running").length} running`}
+          icon={Bot}
+        />
+        <StatCard
+          to="/approvals"
+          title="Pending Approvals"
+          value={0}
+          extra="No action needed"
+          icon={TrendingUp}
+        />
       </div>
       <div className="grid gap-6 lg:grid-cols-2">
         <Card>
@@ -44,9 +79,9 @@ export function DashboardPage() {
           <CardHeader><CardTitle>Recent Agent Runs</CardTitle></CardHeader>
           <CardContent>
             {recentRuns.length === 0 ? <EmptyState title="No agent runs" description="Runs will appear here" /> : (
-              <div className="space-y-3">{recentRuns.map(r => (
+              <div className="space-y-3">{recentRuns.map((r: AgentRun) => (
                 <Link key={r.id} to={`/agent-runs/${r.id}`} className="flex items-center justify-between rounded-lg border p-3 hover:bg-muted/50">
-                  <div><div className="font-medium text-sm">{r.input?.substring(0, 50) || 'Run'}...</div><div className="text-xs text-muted-foreground">{formatDateTime(r.created_at)}</div></div>
+                  <div><div className="font-medium text-sm">{(r.input ?? r.input_text ?? 'Run').substring(0, 50)}...</div><div className="text-xs text-muted-foreground">{formatDateTime(r.created_at)}</div></div>
                   <Badge variant={getStatusColor(r.status)}>{r.status}</Badge>
                 </Link>
               ))}</div>

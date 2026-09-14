@@ -109,4 +109,3 @@ class ScenarioService:
         logger.info(
             "scenario_deleted", scenario_id=scenario_id, org_id=organization_id, user_id=user_id
         )
-

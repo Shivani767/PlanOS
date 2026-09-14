@@ -25,7 +25,9 @@ logger = get_task_logger(__name__)
     retry_kwargs={"max_retries": 3, "countdown": 5},
     retry_backoff=True,
 )
-def execute_scenario(self: Any, scenario_id: str, organization_id: str, job_id: str | None = None) -> dict[str, Any]:
+def execute_scenario(
+    self: Any, scenario_id: str, organization_id: str, job_id: str | None = None
+) -> dict[str, Any]:
     """Execute scenario calculation asynchronously with durable job state."""
     return asyncio.run(_execute_scenario_async(scenario_id, organization_id, job_id))
 

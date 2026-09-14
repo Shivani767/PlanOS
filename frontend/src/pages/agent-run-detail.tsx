@@ -1,10 +1,10 @@
 import { useParams, Link } from 'react-router-dom'
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card'
 import { Badge } from '../components/ui/badge'
-import { PageHeader, LoadingState, ErrorState } from '../components/ui/states'
+import { LoadingState, ErrorState } from '../components/ui/states'
 import { useAgentRun } from '../hooks/useApi'
 import { getErrorMessage } from '../lib/api'
-import { formatDateTime, formatCurrency, getStatusColor } from '../lib/utils'
+import { formatDateTime, getStatusColor } from '../lib/utils'
 import { ArrowLeft, Bot, Clock, Zap, AlertCircle } from 'lucide-react'
 
 export function AgentRunDetailPage() {
@@ -27,7 +27,7 @@ export function AgentRunDetailPage() {
         <div>
           <h1 className="text-2xl font-semibold">{run.input}</h1>
           <div className="flex items-center gap-3 mt-1 text-sm text-muted-foreground">
-            <span className="capitalize">{run.agent_type.replace(/_/g, ' ')}</span>
+            <span className="capitalize">{(run.agent_type ?? 'agent').replace(/_/g, ' ')}</span>
             <span>&middot;</span>
             <span>{formatDateTime(run.created_at)}</span>
             <span>&middot;</span>
@@ -41,9 +41,9 @@ export function AgentRunDetailPage() {
         <Card><CardHeader className="pb-2"><CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2"><Clock className="h-4 w-4" /> Duration</CardTitle></CardHeader>
           <CardContent><div className="text-2xl font-bold">{run.duration_ms ? `${run.duration_ms}ms` : '-'}</div></CardContent></Card>
         <Card><CardHeader className="pb-2"><CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2"><Zap className="h-4 w-4" /> Tokens</CardTitle></CardHeader>
-          <CardContent><div className="text-2xl font-bold">{run.tokens_used ?? '-'}</div></CardContent></Card>
+          <CardContent><div className="text-2xl font-bold">{(run.total_tokens ?? run.prompt_tokens + run.completion_tokens) || '-'}</div></CardContent></Card>
         <Card><CardHeader className="pb-2"><CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2"><Bot className="h-4 w-4" /> Agent</CardTitle></CardHeader>
-          <CardContent><div className="text-sm font-medium capitalize">{run.agent_type.replace(/_/g, ' ')}</div></CardContent></Card>
+          <CardContent><div className="text-sm font-medium capitalize">{(run.agent_type ?? 'agent').replace(/_/g, ' ')}</div></CardContent></Card>
         <Card><CardHeader className="pb-2"><CardTitle className="text-sm font-medium text-muted-foreground">Completed</CardTitle></CardHeader>
           <CardContent><div className="text-sm">{run.completed_at ? formatDateTime(run.completed_at) : '-'}</div></CardContent></Card>
       </div>

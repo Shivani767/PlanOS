@@ -9,7 +9,9 @@ from __future__ import annotations
 import os
 import uuid
 
-os.environ.setdefault("DATABASE_URL", "postgresql+asyncpg://planos:planos@localhost:5433/planos_test")
+os.environ.setdefault(
+    "DATABASE_URL", "postgresql+asyncpg://planos:planos@localhost:5433/planos_test"
+)
 os.environ.setdefault("DATABASE_URL_SYNC", "postgresql://planos:planos@localhost:5433/planos_test")
 os.environ.setdefault("REDIS_URL", "redis://localhost:6380/0")
 os.environ.setdefault("JWT_SECRET_KEY", "test-jwt-secret")
@@ -86,9 +88,13 @@ async def unique_org_user(session: AsyncSession) -> dict:
     org = Organization(name=f"Org {slug}", slug=slug)
     session.add(org)
     await session.flush()
-    user = User(organization_id=org.id, email=f"u-{uuid.uuid4().hex[:8]}@example.com",
-                hashed_password=hash_password("password123"),
-                full_name="Test User", role="ADMIN")
+    user = User(
+        organization_id=org.id,
+        email=f"u-{uuid.uuid4().hex[:8]}@example.com",
+        hashed_password=hash_password("password123"),
+        full_name="Test User",
+        role="ADMIN",
+    )
     session.add(user)
     await session.commit()
     await session.refresh(org)

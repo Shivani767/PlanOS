@@ -1,3 +1,10 @@
+export interface PaginatedResponse<T> {
+  items: T[]
+  total: number
+  page: number
+  page_size: number
+}
+
 export interface User {
   id: string
   email: string
@@ -93,30 +100,71 @@ export interface CreateScenarioRequest {
   changes: ScenarioChanges
 }
 
-export interface AgentRun {
-  id: string
-  organization_id: string
-  agent_type: string
-  status: string
-  input: string
-  output: string | null
-  duration_ms: number | null
-  tokens_used: number | null
-  error: string | null
-  created_at: string
-  completed_at: string | null
-}
-
 export interface AgentStep {
   id: string
   run_id: string
   step_number: number
-  agent_type: string
-  action: string
-  input: Record<string, unknown>
-  output: Record<string, unknown>
+  step_type: string
+  input_data: Record<string, unknown> | null
+  output_data: Record<string, unknown> | null
+  tool_name: string | null
+  tool_arguments: Record<string, unknown> | null
+  tool_result: Record<string, unknown> | null
+  policy_decision: string | null
   duration_ms: number
   created_at: string
+}
+
+export interface AgentRun {
+  id: string
+  organization_id: string
+  agent_id: string
+  agent_type?: string
+  status: string
+  input_text: string | null
+  output_text: string | null
+  error_message: string | null
+  prompt_tokens: number
+  completion_tokens: number
+  total_tokens: number
+  duration_ms: number
+  created_at: string
+  completed_at: string | null
+  steps: AgentStep[]
+  // Aliases for frontend convenience
+  input?: string
+  output?: string
+  error?: string
+  tokens_used?: number
+}
+
+export interface AgentToolInfo {
+  name: string
+  description: string
+  risk: string
+  requires_approval: boolean
+  input_schema: Record<string, unknown>
+}
+
+export interface PlanWorkflowRequest {
+  plan_id: string
+  goal: string
+}
+
+export interface PlanWorkflowResponse {
+  run_id: string
+  status: string
+  output: string | null
+  trace: TraceEntry[]
+}
+
+export interface TraceEntry {
+  agent: string
+  assumptions?: Record<string, number>
+  baseline?: Record<string, unknown>
+  scenarios?: string[]
+  recommendation?: string | null
+  margin_gain_pts?: number
 }
 
 export interface ApprovalRequest {

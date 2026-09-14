@@ -90,17 +90,11 @@ async def test_sequential_stale_version_loses() -> None:
     sf = async_sessionmaker(eng, class_=AsyncSession, expire_on_commit=False)
     async with sf() as s:
         svc = PlanService(s)
-        a = await svc.update(
-            plan_id, PlanUpdate(name="A", expected_version=1), org_id, user_id
-        )
+        a = await svc.update(plan_id, PlanUpdate(name="A", expected_version=1), org_id, user_id)
         assert a.current_version == 2
         with pytest.raises(OptimisticLockError):
-            await svc.update(
-                plan_id, PlanUpdate(name="stale", expected_version=1), org_id, user_id
-            )
-        c = await svc.update(
-            plan_id, PlanUpdate(name="C", expected_version=2), org_id, user_id
-        )
+            await svc.update(plan_id, PlanUpdate(name="stale", expected_version=1), org_id, user_id)
+        c = await svc.update(plan_id, PlanUpdate(name="C", expected_version=2), org_id, user_id)
         assert c.current_version == 3
     eng.dispose()
 

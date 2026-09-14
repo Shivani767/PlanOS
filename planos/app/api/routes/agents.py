@@ -21,6 +21,31 @@ router = APIRouter(prefix="/agents", tags=["Agents"])
 require_agent_execute = require_permission_factory(Permission.AGENT_EXECUTE)
 
 
+@router.get("/runs", response_model=list[AgentRunResponse])
+async def list_agent_runs(
+    current_user: Annotated[
+        AuthenticatedUser, Depends(require_permission_factory(Permission.AGENT_READ))
+    ],
+    session: Annotated[AsyncSession, Depends(get_session)],
+    limit: int = 20,
+    offset: int = 0,
+) -> list[AgentRunResponse]:
+    """List agent runs for the caller's organization, newest first."""
+    from sqlalchemy import select
+
+    from planos.app.models import AgentRun
+
+    result = await session.execute(
+        select(AgentRun)
+        .where(AgentRun.organization_id == current_user.organization_id)
+        .order_by(AgentRun.created_at.desc())
+        .offset(offset)
+        .limit(min(limit, 100))
+    )
+    runs = result.scalars().all()
+    return [AgentRunResponse.model_validate(r) for r in runs]
+
+
 @router.post("/run", response_model=AgentRunResponse, status_code=status.HTTP_202_ACCEPTED)
 async def run_agent_legacy(
     data: AgentRunRequest,

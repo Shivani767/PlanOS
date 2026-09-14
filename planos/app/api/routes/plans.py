@@ -106,7 +106,5 @@ async def delete_plan(
     session: Annotated[AsyncSession, Depends(get_session)],
 ) -> None:
     """Delete a plan (admin only; DB cascades versions + planning data)."""
-    await PlanService(session).delete(
-        plan_id, current_user.organization_id, current_user.user_id
-    )
+    await PlanService(session).delete(plan_id, current_user.organization_id, current_user.user_id)
     await invalidate(cache_key("plan", current_user.organization_id, plan_id) + "*")
