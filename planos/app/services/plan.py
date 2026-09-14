@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from sqlalchemy import select
+from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from planos.app.core.exceptions import NotFoundError, OptimisticLockError
@@ -93,22 +93,34 @@ class PlanService:
         organization_id: str,
         user_id: str,
     ) -> Plan:
-        """Update a plan with optimistic concurrency control."""
+        """Update a plan with database-level optimistic concurrency control.
+
+        The version guard is a single conditional UPDATE: it only succeeds when
+        current_version still equals the caller's expected_version, so two
+        concurrent updates can never both win (no read-check-write race).
+        """
         plan = await self.get_by_id(plan_id, organization_id)
 
-        # Optimistic locking check
-        if plan.current_version != data.expected_version:
-            raise OptimisticLockError(data.expected_version, plan.current_version)
-
-        # Apply updates
         update_data = data.model_dump(exclude_unset=True, exclude={"expected_version"})
-        for field, value in update_data.items():
-            if value is not None:
-                setattr(plan, field, value)
-
-        # Increment version
+        set_fields = {k: v for k, v in update_data.items() if v is not None}
         new_version_num = plan.current_version + 1
-        plan.current_version = new_version_num
+
+        # Atomic guard: bump version + apply fields only if version is unchanged.
+        stmt = (
+            update(Plan)
+            .where(
+                Plan.id == plan_id,
+                Plan.current_version == data.expected_version,
+            )
+            .values(current_version=new_version_num, **set_fields)
+        )
+        result = await self.session.execute(stmt)
+        rowcount = getattr(result, "rowcount", 0)
+        if rowcount != 1:
+            # Either stale version (409) or concurrent winner committed first.
+            await self.session.rollback()
+            fresh = await self.get_by_id(plan_id, organization_id)
+            raise OptimisticLockError(data.expected_version, fresh.current_version)
 
         # Create version snapshot
         version = PlanVersion(
