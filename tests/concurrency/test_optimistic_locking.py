@@ -8,6 +8,7 @@ Python read-check-write).
 from __future__ import annotations
 
 import asyncio
+import os
 import uuid
 
 import pytest
@@ -19,7 +20,11 @@ from planos.app.models import Organization, Plan, PlanVersion, User
 from planos.app.schemas.plan import PlanUpdate
 from planos.app.services.plan import PlanService
 
-TEST_DB = "postgresql+asyncpg://planos:planos@localhost:5433/planos_test"
+# Resolved at import time so CI (5432) and local compose (5433) both work.
+# Do NOT import from tests.conftest here — it executes fixture setup on import.
+TEST_DB = os.environ.get(
+    "DATABASE_URL", "postgresql+asyncpg://planos:planos@localhost:5433/planos_test"
+)
 
 
 def _make_engine():

@@ -9,11 +9,28 @@ from __future__ import annotations
 import os
 import uuid
 
-os.environ.setdefault(
-    "DATABASE_URL", "postgresql+asyncpg://planos:planos@localhost:5433/planos_test"
-)
-os.environ.setdefault("DATABASE_URL_SYNC", "postgresql://planos:planos@localhost:5433/planos_test")
-os.environ.setdefault("REDIS_URL", "redis://localhost:6380/0")
+
+def _resolve_test_urls() -> tuple[str, str]:
+    """Honor CI-provided DATABASE_URL; fall back to local dev ports.
+
+    CI exposes Postgres on 5432 while local docker-compose maps 5433,
+    so hardcoded ports break one environment or the other.
+    """
+    async_url = os.environ.get(
+        "DATABASE_URL", "postgresql+asyncpg://planos:planos@localhost:5433/planos_test"
+    )
+    sync_url = os.environ.get("DATABASE_URL_SYNC")
+    if not sync_url:
+        sync_url = async_url.replace("+asyncpg", "").replace("+psycopg", "")
+        if ":5432/planos_test" in sync_url or ":5433/planos_test" in sync_url:
+            pass  # already points at the test DB
+    return async_url, sync_url
+
+
+_TEST_ASYNC_URL, _TEST_SYNC_URL = _resolve_test_urls()
+
+os.environ.setdefault("DATABASE_URL", _TEST_ASYNC_URL)
+os.environ.setdefault("DATABASE_URL_SYNC", _TEST_SYNC_URL)
 os.environ.setdefault("JWT_SECRET_KEY", "test-jwt-secret")
 os.environ.setdefault("SECRET_KEY", "test-secret-key")
 os.environ.setdefault("APP_ENV", "test")
@@ -35,9 +52,9 @@ from planos.app.models import Organization, User
 if TYPE_CHECKING:
     from httpx import AsyncClient
 
-# Test database URL
-TEST_DATABASE_URL = "postgresql+asyncpg://planos:planos@localhost:5433/planos_test"
-TEST_DATABASE_URL_SYNC = "postgresql://planos:planos@localhost:5433/planos_test"
+# Test database URL (resolved above so CI env vars win over local defaults)
+TEST_DATABASE_URL = _TEST_ASYNC_URL
+TEST_DATABASE_URL_SYNC = _TEST_SYNC_URL
 
 
 @pytest.fixture(scope="session", autouse=True)
